@@ -1,5 +1,7 @@
 package de.drunkenapps.buttongame;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,6 +14,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
 
     Button[] buttons;
     Button playAgain;
+    Button skipRed;
     TextView scoreView;
     TextView triesView;
     TextView timeTaken;
@@ -19,6 +22,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
     int triesLeft;
     Date startDate;
     Date endDate;
+    boolean red;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +32,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         scoreView = findViewById(R.id.scoreView);
         triesView = findViewById(R.id.triesView);
         timeTaken = findViewById(R.id.timeTaken);
+        skipRed = findViewById(R.id.skipRed);
         playAgain = findViewById(R.id.playAgain);
 
         playAgain.setOnClickListener(new View.OnClickListener() {
@@ -56,11 +61,25 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         buttons[14] = findViewById(R.id.button14);
         buttons[15] = findViewById(R.id.button15);
 
+        skipRed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((ColorDrawable)getActiveButton().getBackground()).getColor() == Color.RED){
+                    makeMove(getActiveButton());
+                }
+                triesLeft--;
+                updateScoreAndTries();
+                checkGame();
+            }
+        });
+
         setup();
 
     }
 
     void setup(){
+
+        red = false;
 
         score = 0;
         triesLeft = 10;
@@ -71,13 +90,24 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
 
         for (Button button : buttons) {
             button.setVisibility(View.INVISIBLE);
+            button.setBackgroundColor(Color.GREEN);
             button.setOnClickListener(this);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            buttons[getRand()].setBackgroundColor(Color.RED);
         }
 
         playAgain.setVisibility(View.INVISIBLE);
         playAgain.setClickable(false);
 
+        skipRed.setClickable(true);
+
         buttons[getRand()].setVisibility(View.VISIBLE);
+        while (((ColorDrawable) (getActiveButton().getBackground())).getColor() == Color.RED){
+            getActiveButton().setVisibility(View.INVISIBLE);
+            buttons[getRand()].setVisibility(View.VISIBLE);
+        }
 
         startDate = new Date();
     }
@@ -85,17 +115,30 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if (v.getVisibility() == View.VISIBLE){
-            score++;
+            ColorDrawable colorDrawable = (ColorDrawable) v.getBackground();
+            if (colorDrawable.getColor() == Color.RED){
+                score -= 3;
+            }
             triesLeft--;
-            v.setVisibility(View.INVISIBLE);
-            buttons[getRand()].setVisibility(View.VISIBLE);
-            updateScoreAndTries();
+            makeMove(v);
         }
 
+        checkGame();
+    }
+
+    void makeMove(View v){
+        score++;
+        v.setVisibility(View.INVISIBLE);
+        buttons[getRand()].setVisibility(View.VISIBLE);
+        updateScoreAndTries();
+    }
+
+    boolean checkGame(){
         if (triesLeft <= 0) {
             endGame();
-            return;
+            return false;
         }
+        return true;
     }
 
     void endGame(){
@@ -105,19 +148,31 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
             button.setOnClickListener(null);
         }
 
-        timeTaken.setText("millis: " + (endDate.getTime() - startDate.getTime()));
+        timeTaken.setText("Time: " + (endDate.getTime() - startDate.getTime()));
         timeTaken.setVisibility(View.VISIBLE);
 
         playAgain.setVisibility(View.VISIBLE);
         playAgain.setClickable(true);
+
+        skipRed.setClickable(false);
     }
 
     int getRand(){
         return (int) (Math.random() * 16 );
     }
 
+    Button getActiveButton(){
+        for (Button button :
+                buttons) {
+            if (button.getVisibility() == View.VISIBLE){
+                return button;
+            }
+        }
+        return null;
+    }
+
     void updateScoreAndTries(){
         scoreView.setText("Score: " + score);
-        triesView.setText("Tries left: " + triesLeft);
+        triesView.setText("Clicks left: " + triesLeft);
     }
 }
