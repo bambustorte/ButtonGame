@@ -6,14 +6,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Date;
+
 public class ActivityMain extends AppCompatActivity implements View.OnClickListener {
 
     Button[] buttons;
     Button playAgain;
     TextView scoreView;
-    TextView timeView;
+    TextView triesView;
+    TextView timeTaken;
     int score;
-    int timeLeft;
+    int triesLeft;
+    Date startDate;
+    Date endDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +26,8 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         scoreView = findViewById(R.id.scoreView);
-        timeView = findViewById(R.id.timeView);
+        triesView = findViewById(R.id.triesView);
+        timeTaken = findViewById(R.id.timeTaken);
         playAgain = findViewById(R.id.playAgain);
 
         playAgain.setOnClickListener(new View.OnClickListener() {
@@ -57,9 +63,11 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
     void setup(){
 
         score = 0;
-        timeLeft = 10000;
+        triesLeft = 10;
 
-        updateScore();
+        timeTaken.setVisibility(View.INVISIBLE);
+
+        updateScoreAndTries();
 
         for (Button button : buttons) {
             button.setVisibility(View.INVISIBLE);
@@ -71,56 +79,35 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
 
         buttons[getRand()].setVisibility(View.VISIBLE);
 
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (!isInterrupted()) {
-                        if (timeLeft <= 0){
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    endGame();
-                                }
-                            });
-                            return;
-                        }
-
-                        Thread.sleep(100);
-                        timeLeft -= 100;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                timeView.setText("Time left: " + timeLeft/1000 + "." + timeLeft%1000);
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        t.start();
+        startDate = new Date();
     }
 
     @Override
     public void onClick(View v) {
         if (v.getVisibility() == View.VISIBLE){
             score++;
+            triesLeft--;
             v.setVisibility(View.INVISIBLE);
             buttons[getRand()].setVisibility(View.VISIBLE);
-            updateScore();
+            updateScoreAndTries();
+        }
+
+        if (triesLeft <= 0) {
+            endGame();
+            return;
         }
     }
 
     void endGame(){
+        endDate = new Date();
         for (Button button : buttons) {
-//            button.setClickable(false);
-//            button.setEnabled(false);
-//            button.setBackgroundColor(Color.BLACK);
             button.setVisibility(View.VISIBLE);
             button.setOnClickListener(null);
         }
+
+        timeTaken.setText("millis: " + (endDate.getTime() - startDate.getTime()));
+        timeTaken.setVisibility(View.VISIBLE);
+
         playAgain.setVisibility(View.VISIBLE);
         playAgain.setClickable(true);
     }
@@ -129,7 +116,8 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         return (int) (Math.random() * 16 );
     }
 
-    void updateScore(){
+    void updateScoreAndTries(){
         scoreView.setText("Score: " + score);
+        triesView.setText("Tries left: " + triesLeft);
     }
 }

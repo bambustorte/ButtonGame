@@ -139,7 +139,7 @@
         android:text="score" />
 
     <TextView
-        android:id="@+id/timeView"
+        android:id="@+id/triesView"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_column="1"
@@ -155,4 +155,13 @@
         android:layout_columnSpan="2"
         android:layout_row="5"
         android:text="Play again" />
+
+    <TextView
+        android:id="@+id/timeTaken"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_row="6"
+        android:text="TextView" />
+
 </GridLayout>
